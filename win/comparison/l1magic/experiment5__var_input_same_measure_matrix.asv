@@ -1,0 +1,103 @@
+% put key subdirectories in path if not already there
+path(path, './Optimization');
+
+close all;
+clear all;
+clc;
+
+load('E:\Luo\data\mnist_all');
+
+s = reshape(train6(1,:), 28, 28)';
+figure; imshow(s);
+figure; mesh(double(s));
+
+x = reshape(s, 28*28, 1);
+N = size(x, 1);
+
+% number of observations to make
+%K = round(N*4/10) + 40;
+N = 28*28;
+M = 20;
+K = M*M;
+
+% measurement matrix
+disp('Creating measurment matrix...');
+A = randn(K,N);
+A = orth(A')';
+disp('Done.');
+
+total = 100;
+ys = zeros(K, total);
+for i = 1:total
+    % observations
+    disp(sprintf('Do measure %d', i));
+    x = double(train6(i,:)');
+    ys(:, i) = A*x;
+end
+
+% the same entry in different measurements
+% s
+figure;
+for i = 1:20
+    subplot(5, 4, i);
+    hist(ys(i+50,:), 10)
+end
+
+
+
+%figure; imshow(reshape(int8(ys(:,1)), M, M));
+%figure; mesh(reshape(ys(:,1), M, M));
+
+%% OMP recover
+%yhat = omp(A, ys(:,1));
+%yp = int8(yhat)';
+%figure; imshow(reshape(yp, 28, 28)');
+%figure; mesh(reshape(yhat, 28, 28)');
+
+
+%% BP recover
+% initial guess = min energy
+% x0 = A'*y;
+% 
+% % solve the LP
+% tic
+% xp = l1eq_pd(x0, A, [], y, 1e-3);
+% toc
+% 
+% xpp = int8(xp);
+% figure,
+% imshow(reshape(xpp, 28, 28));
+
+
+
+%% caculate energy
+% original signal
+% dfx = x - mean(x);
+% ndfx = dfx / sqrt(dfx' * dfx);
+% nx = reshape(ndfx, 28, 28);
+% [nx1, nx2 ,nx3] = svd(cov(nx));
+% ex = sum(sum(nx2(1:4, 1:4)));
+% 
+% % compressed signal
+% dfy = y - mean(y);
+% ndfy = dfy / sqrt(dfy' * dfy);
+% ny = reshape(ndfy, 20, 20);
+% [ny1, ny2 ,ny3] = svd(cov(ny));
+% ey = sum(sum(ny2(1:12, 1:12)));
+% 
+% disp(sprintf('the energy of Original signal difference = %.4f, the energy of Compressed signal difference = %.4f\n', ex, ey));
+% 
+% figure, pmusic(dfx, 4);
+% figure, pmusic(dfy, 12);
+
+% large scale
+% Afun = @(z) A*z;
+% Atfun = @(z) A'*z;
+% tic
+% xp = l1eq_pd(x0, Afun, Atfun, y, 1e-3, 30, 1e-8, 200);
+% toc
+
+
+
+
+
