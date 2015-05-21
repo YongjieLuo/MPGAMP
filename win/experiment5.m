@@ -3,7 +3,7 @@ clc;
 
 trialSetup;
 
-trialNum = 10;
+trialNum = 20;
 
 Gamma = [0.0 1.8 2.0 2.4 2.6 2.8 3.6 4.8 6.0 20.0 65.0 100.0 150.0];
 gammaNum = length(Gamma);
@@ -24,8 +24,6 @@ nu0 = 1e-3;
 %Set options for GAMP
 GAMP_options = GampOpt;
 MpGAMP_options = MpGAMPOpt;  %initialize the options object
-
-SNR = 40;
 
 methods = {'(a) OMP', '(b) BP', '(c) AMP', '(d) GAMP', '(e) MPGAMP'};
 [~,J] = size(methods);
@@ -64,33 +62,34 @@ for n = 1:gammaNum
         % Generate noisy signal
         y = z + sqrt(nu0)*randn(size(z));        
         
-%         % OMP
-%         [xhatOMP,itersOMP,usedOMP] = SolveOMP(A,y,N,30,1e-6,0,0,1e-8);
-%         err_absolute{1}(n,i) = norm(x-xhatOMP);                
-%         err_relative{1}(n,i) = norm(x-xhatOMP)/norm(x);
-%         
-%         % BP
-%         % Determine noise variance
-%         Z = A*X;
-%         sigma = norm(reshape(Z,[],1))^2/M/L*10^(-SNR/10);
-%         % initial guess = min energy
-%         x0 = A'*y;
-%         % take epsilon a little bigger than sigma*sqrt(K)
-%         epsilon =  sigma*sqrt(M)*sqrt(1 + 2*sqrt(2)/sqrt(M));
-%         %xhatBP = l1qc_logbarrier(x0,A,[],y,epsilon,1e-3);
-%         % large scale
-%         Afun = @(z) A*z;
-%         Atfun = @(z) A'*z;
-%         xhatBP = l1qc_logbarrier(x0,Afun,Atfun,y,epsilon,1e-3);
-%         err_absolute{2}(n,i) = norm(x-xhatBP);        
-%         err_relative{2}(n,i) = norm(x-xhatBP)/norm(x);
+        % OMP
+        [xhatOMP,itersOMP,usedOMP] = SolveOMP(A,y,N,30,1e-6,0,0,1e-8);
+        err_absolute{1}(n,i) = norm(x-xhatOMP);                
+        err_relative{1}(n,i) = norm(x-xhatOMP)/norm(x);
         
-%         % AMP
-%         T = 1000;  % Number of iterations
-%         tol = 0.001;  % Tolerance
-%         xhatAMP = reconstructAmp(A,y,T,tol,x,0);
-%         err_absolute{3}(n,i) = norm(x-xhatAMP);        
-%         err_relative{3}(n,i) = norm(x-xhatAMP)/norm(x);
+        % BP
+        % Determine noise variance
+        SNR = 20;
+        Z = A*X;
+        sigma = norm(reshape(Z,[],1))^2/M/L*10^(-SNR/10);
+        % initial guess = min energy
+        x0 = A'*y;
+        % take epsilon a little bigger than sigma*sqrt(K)
+        epsilon =  sigma*sqrt(M)*sqrt(1 + 2*sqrt(2)/sqrt(M));
+        %xhatBP = l1qc_logbarrier(x0,A,[],y,epsilon,1e-3);
+        % large scale
+        Afun = @(z) A*z;
+        Atfun = @(z) A'*z;
+        xhatBP = l1qc_logbarrier(x0,Afun,Atfun,y,epsilon,1e-3);
+        err_absolute{2}(n,i) = norm(x-xhatBP);        
+        err_relative{2}(n,i) = norm(x-xhatBP)/norm(x);
+        
+        % AMP
+        T = 1000;  % Number of iterations
+        tol = 0.001;  % Tolerance
+        xhatAMP = reconstructAmp(A,y,T,tol,x,0);
+        err_absolute{3}(n,i) = norm(x-xhatAMP);        
+        err_relative{3}(n,i) = norm(x-xhatAMP)/norm(x);
         
         % GAMP with Gaussian noise model
         %Input channel
@@ -99,11 +98,11 @@ for n = 1:gammaNum
         %Output channel
         outputEst = AwgnEstimOut(y, nu0);
         %Run GAMP
-%         [resGAMP,~,~,~,~,~,~,~, estHistGAMP] = ...
-%             gampEst(inputEst, outputEst, A, GAMP_options);
-%         xhatGAMP = resGAMP;
-%         err_absolute{4}(n,i) = norm(x-xhatGAMP);        
-%         err_relative{4}(n,i) = norm(x-xhatGAMP)/norm(x);
+        [resGAMP,~,~,~,~,~,~,~, estHistGAMP] = ...
+            gampEst(inputEst, outputEst, A, GAMP_options);
+        xhatGAMP = resGAMP;
+        err_absolute{4}(n,i) = norm(x-xhatGAMP);        
+        err_relative{4}(n,i) = norm(x-xhatGAMP)/norm(x);
         
         % MPGAMP
         [result, history] = ...
